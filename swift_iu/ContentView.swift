@@ -8,45 +8,67 @@
 import SwiftUI
 import CoreData
 
+
+
 struct ContentView: View {
     @Environment(\.managedObjectContext) private var viewContext
-
+    
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Item.timestamp, ascending: true)],
         animation: .default)
     private var items: FetchedResults<Item>
+    @State var isLinkActive = false
+    
+   
+    @State private var progress: CGFloat = 0
 
     var body: some View {
         NavigationView {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp!, formatter: itemFormatter)")
-                    } label: {
-                        Text(item.timestamp!, formatter: itemFormatter)
-                    }
-                }
-                .onDelete(perform: deleteItems)
-            }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
+            VStack(spacing: 0){
+                NavbarView(title: "Home")
+                VStackBodyView {
+                    NavigationLink(destination: SeachView().hiddenNavigationBarStyle(), isActive: $isLinkActive) {
+                        ButtomProjectView(title: "Next Screen") {
+                            self.isLinkActive = true
+                        }
                     }
                 }
             }
-            Text("Select an item")
+            .hiddenNavigationBarStyle()
         }
     }
-
+    
+    //    var body: some View {
+    //        NavigationView {
+    //            List {
+    //                ForEach(items) { item in
+    //                    NavigationLink {
+    //                        Text("Item at \(item.timestamp!, formatter: itemFormatter)")
+    //                    } label: {
+    //                        Text(item.timestamp!, formatter: itemFormatter)
+    //                    }
+    //                }
+    //                .onDelete(perform: deleteItems)
+    //            }
+    //            .toolbar {
+    //                ToolbarItem(placement: .navigationBarTrailing) {
+    //                    EditButton()
+    //                }
+    //                ToolbarItem {
+    //                    Button(action: addItem) {
+    //                        Label("Add Item", systemImage: "plus")
+    //                    }
+    //                }
+    //            }
+    //            Text("Select an item")
+    //        }
+    //    }
+    
     private func addItem() {
         withAnimation {
             let newItem = Item(context: viewContext)
             newItem.timestamp = Date()
-
+            
             do {
                 try viewContext.save()
             } catch {
@@ -57,11 +79,11 @@ struct ContentView: View {
             }
         }
     }
-
+    
     private func deleteItems(offsets: IndexSet) {
         withAnimation {
             offsets.map { items[$0] }.forEach(viewContext.delete)
-
+            
             do {
                 try viewContext.save()
             } catch {
